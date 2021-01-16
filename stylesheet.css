@@ -1,0 +1,75 @@
+html, body{
+    height: 100%;
+    padding: 0;
+    margin: 0;
+}
+button:disabled{
+    color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+#graphWrapper{
+    border-radius: .25rem;
+    background-color: #fff0f0;
+    padding: 1rem;
+    margin: 1rem;
+    height: 75%;
+}
+#graph{
+    height: 100%;
+}
+#time{
+    float: right;
+}
+#input{
+    padding: 0 1rem;
+}
+label.option{
+    margin: 0 1rem;
+}
+#status{
+    font-family: "Adobe Devanagari", sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+    position: relative;
+    padding: 1rem;
+    margin: 1rem;
+    border: 2px solid transparent;
+    border-radius: .25rem;
+}
+.connected{
+    color: #0f5132;
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+}
+.disconnected{
+    color: #842029;
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+}
+
+button{
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+    font-family: inherit;
+    text-transform: none;
+    display: inline-block;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    user-select: none;
+    border: 1px solid #198754;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    color: #fff;
+    background-color: #198754;
+    cursor: pointer;
+    margin: .25rem .125rem;
+}
