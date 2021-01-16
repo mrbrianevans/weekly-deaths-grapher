@@ -14,8 +14,9 @@ The data source is https://api.beta.ons.gov.uk/v1/datasets/weekly-deaths-age-sex
 
 
 ## Run this server
-To run the project, download the repository and `npm start` in the directory.
+To run the project, download the repository and `npm ci && npm start` in the directory.
 
+It usually takes about 38 seconds to draw the graph, but depends on the speed of the Office for National Statistics API.
 
 # Example
 

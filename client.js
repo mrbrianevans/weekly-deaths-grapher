@@ -23,6 +23,10 @@ const drawGraph = () => {
             backgroundColor: {
                 fill: '#fff0f0',
                 stroke: '#dc3545'
+            },
+            animation: {
+                duration: 8,
+                easing: 'in'
             }
         }
 

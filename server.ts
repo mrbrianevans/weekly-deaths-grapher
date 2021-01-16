@@ -72,11 +72,13 @@ io.on('connection', (socket)=>{
     console.log("\x1b[36mNew connection started\x1b[0m")
     socket.on('fetch', async(params)=>{
         console.log("Emitting all datapoints")
-        for (let year = 2010; year <= 2020; year++) {
+        for (let year = 2010; year <= 2021; year++) {
             for (let week = 1; week <= 53; week++) {
                 const result = await fetchWeek(year, week, params.age_groups, params.sex)
                 if(result)
                     socket.emit('dataPoint', {year: year, week: week, value: result, ...params})
+                else
+                    break
             }
         }
         socket.emit('finished', true)
