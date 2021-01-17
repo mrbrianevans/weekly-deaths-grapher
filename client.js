@@ -2,9 +2,21 @@ const socket = io()
 const FinishedEvent = new CustomEvent('finished', {time: Date.now()})
 const time = document.getElementById('time')
 
+const getSelection = (id_of_select) => {
+    const ele = document.getElementById(id_of_select)
+    const options = ele.children
+    for(let i = 0; i < ele.childElementCount; i++)
+        if(options[i].selected) return (options[i].value)
+}
+
 const drawGraph = () => {
     console.log("Drawing graph, fetching data")
-        socket.emit('fetch', {sex: 'all', age_groups: 'all'})
+        socket.emit('fetch', {
+            sex: 'all', age_groups: 'all',
+            start_year: getSelection('start-year'),
+            end_year: getSelection('end-year'),
+            week_intervals: getSelection('week-intervals')
+        })
         const startTime = Date.now()
         const timer = setInterval(()=>{
             time.innerText = Date.now() - startTime + 'ms'

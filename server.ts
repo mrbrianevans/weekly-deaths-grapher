@@ -71,14 +71,16 @@ server.get('/fetch', async(req, res)=>{
 io.on('connection', (socket)=>{
     console.log("\x1b[36mNew connection started\x1b[0m")
     socket.on('fetch', async(params)=>{
-        console.log("Emitting all datapoints")
-        for (let year = 2010; year <= 2021; year++) {
-            for (let week = 1; week <= 53; week++) {
+        console.log("Emitting all datapoints", params)
+        for (let year = params["start_year"]; year <= params["end_year"]; year++) {
+            for (let week = 1; week <= 53; week += Number(params["week_intervals"])) {
                 const result = await fetchWeek(year, week, params.age_groups, params.sex)
                 if(result)
                     socket.emit('dataPoint', {year: year, week: week, value: result, ...params})
-                else
+                else {
+                    console.log(`Reached the end of ${year} at week ${week}`)
                     break
+                }
             }
         }
         socket.emit('finished', true)

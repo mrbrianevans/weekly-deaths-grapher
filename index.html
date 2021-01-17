@@ -12,6 +12,43 @@
 <div id="input">
 <button disabled="disabled" id="drawButton">Draw graph</button>
     <span id="time"></span>
+    <label>
+        <div class="select-label">Start year</div>
+        <select id="start-year">
+            <option>2010</option>
+            <option>2011</option>
+            <option>2012</option>
+            <option>2013</option>
+            <option>2014</option>
+            <option selected>2015</option>
+        </select>
+    </label>
+
+    <label>
+        End year
+        <select id="end-year">
+            <option>2016</option>
+            <option>2017</option>
+            <option>2018</option>
+            <option>2019</option>
+            <option>2020</option>
+            <option selected>2021</option>
+        </select>
+    </label>
+
+    <label>
+        Week intervals
+        <select id="week-intervals">
+            <option>1</option>
+            <option>3</option>
+            <option>5</option>
+            <option selected>10</option>
+            <option>26</option>
+            <option>52</option>
+        </select>
+    </label>
+
+    <!--    THIS NEEDS THE SERVER TO HAVE A FULL DOWNLOAD OF THE DATABASE-->
 <!--    <label class="option">-->
 <!--        <input type="radio" value="combined" checked name="options"/>-->
 <!--        Combined-->
