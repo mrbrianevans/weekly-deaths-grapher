@@ -21,9 +21,9 @@ server.get('/css', (req, res)=>{
 // Either both age and sex must be specified, or neither, but never only one
 const fetchWeek = async(year, week, age_groups='all', sex='all') => {
     let base_url
-    if (year == 2020) {
+    if (year >= 2020) {
         if (age_groups == 'all') age_groups = 'all-ages'
-        base_url = 'https://api.beta.ons.gov.uk/v1/datasets/weekly-deaths-age-sex/editions/covid-19/versions/13/observations?'
+        base_url = 'https://api.beta.ons.gov.uk/v1/datasets/weekly-deaths-age-sex/editions/covid-19/versions/14/observations?'
     }
     else if (2010 <= year && year < 2020)
         base_url = 'https://api.beta.ons.gov.uk/v1/datasets/weekly-deaths-age-sex/editions/2010-19/versions/1/observations?'
