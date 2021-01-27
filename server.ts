@@ -1,3 +1,5 @@
+import {fetchWeek} from "./api";
+
 const express = require('express')
 const server = express()
 const httpServer = require('http').Server(server)
@@ -5,7 +7,7 @@ const io = require('socket.io')(httpServer)
 const path = require('path')
 const axios = require('axios').default
 
-server.get('/', (req, res)=>{
+server.get('/', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'index.html'))
 })
 
@@ -16,48 +18,6 @@ server.get('/css', (req, res)=>{
     res.sendFile(path.resolve(__dirname, 'stylesheet.css'))
 })
 
-// Fetch the number of deaths in a particular week between 2010 and 2020
-//
-// Either both age and sex must be specified, or neither, but never only one
-const fetchWeek = async(year, week, age_groups='all', sex='all') => {
-    let base_url
-    if (year >= 2020) {
-        if (age_groups == 'all') age_groups = 'all-ages'
-        base_url = 'https://api.beta.ons.gov.uk/v1/datasets/weekly-deaths-age-sex/editions/covid-19/versions/14/observations?'
-    }
-    else if (2010 <= year && year < 2020)
-        base_url = 'https://api.beta.ons.gov.uk/v1/datasets/weekly-deaths-age-sex/editions/2010-19/versions/1/observations?'
-    else
-        return 0
-    const response = await axios.get(base_url, {params: {
-            'week': `week-${week}`,
-            'agegroups': age_groups,
-            'time': year,
-            'geography': 'K04000001',
-            'deaths': 'total-registered-deaths',
-            'sex': sex
-        }})
-    // console.log(response.request)
-    if(response.status===200){
-        if(response.data.observations === null) {
-        console.error("No registered observations")
-            return false
-        }
-        if(response.data.observations.length !== 1) {
-        console.error("Not one observation")
-            return false
-        }
-        if(!response.data.observations[0].observation) {
-        console.error("The observation is null")
-            return false
-        }
-        // console.log(response.data['observations'])
-        return Number(response.data['observations'][0]['observation'])
-    }else {
-        console.error("Non OK response code")
-        return false
-    }
-}
 
 server.get('/fetch', async(req, res)=>{
     const {year, week} = req.query
