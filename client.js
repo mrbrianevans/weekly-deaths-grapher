@@ -11,16 +11,19 @@ const getSelection = (id_of_select) => {
 
 const drawGraph = () => {
     console.log("Drawing graph, fetching data")
-        socket.emit('fetch', {
-            sex: 'all', age_groups: 'all',
-            start_year: getSelection('start-year'),
-            end_year: getSelection('end-year'),
-            week_intervals: getSelection('week-intervals')
-        })
-        const startTime = Date.now()
-        const timer = setInterval(()=>{
-            time.innerText = Date.now() - startTime + 'ms'
-        }, 100)
+    //todo: allow the user to pick sex and age_group
+    // sex should be a tick box, whether or not to separate by male and female, or combine them
+    // age_group should be a tick box whether to show a stacked area chart by age group
+    socket.emit('fetch', {
+        sex: 'all', age_groups: 'all',
+        start_year: Number(getSelection('start-year')),
+        end_year: Number(getSelection('end-year')),
+        week_intervals: Number(getSelection('week-intervals'))
+    })
+    const startTime = Date.now()
+    const timer = setInterval(() => {
+        time.innerText = Date.now() - startTime + 'ms'
+    }, 100)
         time.addEventListener('finished', ()=>{
             clearInterval(timer)
         })
@@ -37,25 +40,36 @@ const drawGraph = () => {
                 stroke: '#dc3545'
             },
             animation: {
-                duration: 8,
-                easing: 'in'
-            }
+                duration: 100,
+                easing: 'linear'
+            },
+            curveType: 'function'
         }
-
-        const datatable = new google.visualization.DataTable()
-        datatable.addColumn('date', 'Week')
-        datatable.addColumn('number', 'Deaths')
-        const chartWrapper = new google.visualization.ChartWrapper({
-            chartType: 'LineChart',
-            dataTable: datatable,
-            options: options,
-            containerId: 'graph'
-        })
+    
+    const datatable = new google.visualization.DataTable()
+    datatable.addColumn('date', 'Week')
+    datatable.addColumn('number', 'Deaths')
+    const chartWrapper = new google.visualization.ChartWrapper({
+        chartType: 'LineChart',
+        dataTable: datatable,
+        options: options,
+        containerId: 'graph'
+    })
+    chartWrapper.draw()
+    const drawer = setInterval(() => {
+        // console.log("Drawing graph")
         chartWrapper.draw()
-        socket.on('dataPoint', (data)=>{
-            datatable.addRow([new Date(data.year, 0, (1 + (data.week - 1) * 7)), data.value])
-            chartWrapper.draw()
-        })
+    }, 150)
+    socket.on('dataPoint', (data) => {
+        // console.log("Received", data.value)
+        datatable.addRow([new Date(data.year, 0, (1 + (data.week - 1) * 7)), data.value])
+        // chartWrapper.draw()
+    })
+    const stopDrawingInterval = socket.on('finished', () => {
+        socket.off('datapoint') //stop listening after the graph is drawn
+        socket.off('finished', stopDrawingInterval)
+        clearInterval(drawer) // stop drawing the graph
+    })
 }
 
 const drawButton = document.getElementById('drawButton')
@@ -84,22 +98,22 @@ const status = document.getElementById('status')
 }
 socket.on('connect', ()=>{
     setConnected(true)
-    socket.on('disconnect', ()=> {
-        setConnected(false)
-    })
-    if(googleHasLoaded) {
+    if (googleHasLoaded) {
         console.log("Google loaded first")
         enableDrawButton()
-    }
-    else(google.charts.setOnLoadCallback(()=>{
+    } else (google.charts.setOnLoadCallback(() => {
         console.log("Socket connected first")
         enableDrawButton()
     }))
-    socket.on('finished', ()=>{
-        console.log("Finished drawing graph")
-        drawButton.disabled = false
-        time.dispatchEvent(FinishedEvent)
-    }
-    )
 })
 
+socket.on('disconnect', () => {
+    setConnected(false)
+})
+
+socket.on('finished', () => {
+      console.log("Finished drawing graph")
+      drawButton.disabled = false
+      time.dispatchEvent(FinishedEvent)
+  }
+)

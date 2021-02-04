@@ -1,11 +1,11 @@
 import {fetchWeek} from "./api";
+import {fetchDeathsFromDb, loadDatabase} from "./database";
 
 const express = require('express')
 const server = express()
 const httpServer = require('http').Server(server)
 const io = require('socket.io')(httpServer)
 const path = require('path')
-const axios = require('axios').default
 
 server.get('/', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'index.html'))
@@ -31,11 +31,14 @@ server.get('/fetch', async(req, res)=>{
 io.on('connection', (socket)=>{
     console.log("\x1b[36mNew connection started\x1b[0m")
     socket.on('fetch', async(params)=>{
+
         console.log("Emitting all datapoints", params)
         for (let year = params["start_year"]; year <= params["end_year"]; year++) {
+            //todo: make intervals the total in a 3 week interval, rather than every third week
             for (let week = 1; week <= 53; week += Number(params["week_intervals"])) {
-                const result = await fetchWeek(year, week, params.age_groups, params.sex)
-                if(result)
+                // const result = await fetchWeek(year, week, params.age_groups, params.sex)
+                const result = await fetchDeathsFromDb(year, week, params.age_groups, params.sex)
+                if (result)
                     socket.emit('dataPoint', {year: year, week: week, value: result, ...params})
                 else {
                     console.log(`Reached the end of ${year} at week ${week}`)
@@ -49,4 +52,10 @@ io.on('connection', (socket)=>{
 })
 
 
-httpServer.listen(3000, ()=>console.log(`\x1b[32mListening on http://localhost:3000\x1b[0m`))
+httpServer.listen(3000, () => console.log(`\x1b[32mListening on http://localhost:3000\x1b[0m`))
+
+// update the database every 24 hours with the latest ONS data
+setInterval(() => {
+    console.time("Loading database")
+    loadDatabase().then(() => console.timeEnd("Loading database"))
+}, 1000 * 60 * 60 * 24)

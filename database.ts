@@ -9,9 +9,8 @@ const age_groups: (year: number) => string[] = (year) => {
             "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90+"]
 }
 
-// this still needs more testing to see if it starts and stops at the correct places
 // this loads all data into the database from where it last left off. Takes over 2 hours to run from empty
-const loadDatabase = async () => {
+export const loadDatabase = async () => {
     let d = new sqlite.Database('covid.db')
 
     const getLatestResult: () => Promise<{ year, week }> = () => {
@@ -64,6 +63,7 @@ const loadDatabase = async () => {
                 }
                 if (!hasNextWeek) break;
             }
+            console.log()
             week++
         }
         if (!hasNextWeek && week === 2) hasNextYear = false;
@@ -93,8 +93,8 @@ export const fetchDeathsFromDb = async (year: number = 0, week: number = 0, age_
     if (age_groups !== 'all') params.push(age_groups)
     if (sex !== 'all') params.push(sex)
 
-    console.log("Query: ", statement)
-    console.log("Params: ", params)
+    // console.log("Query: ", statement)
+    // console.log("Params: ", params)
 
     const result = await new Promise((resolve, reject) => {
         let d = new sqlite.Database('covid.db')
@@ -105,21 +105,22 @@ export const fetchDeathsFromDb = async (year: number = 0, week: number = 0, age_
         d.close()
     })
 
-    if (year !== 0) console.assert(result['year'] === year)
-    if (week !== 0) console.assert(result['week'] === week)
-    if (age_groups !== 'all') console.assert(result['age_group'] === age_groups)
-    if (sex !== 'all') console.assert(result['sex'] === sex)
-    console.log('Result: ', result)
+    // console.log('Result: ', result, 'requested:', year, week, age_groups, sex)
+    if (year !== 0 && result['year'] !== year) return false
+    if (week !== 0 && result['week'] !== week) return false
+    if (age_groups !== 'all' && result['age_group'] !== age_groups) return false
+    if (sex !== 'all' && result['sex'] !== sex) return false
+    await new Promise(resolve => setTimeout(resolve, 100))
     return result['deaths']
 }
 
-//doesn't return data in a nice format. each element of the array is labeled
+// returns a nice list of strings of the different options for a given dimension. Year can optionally be specified (default 2020)
 export const fetchOptionsFromDb = async (dimension: 'year' | 'week' | 'age_group' | 'sex', year = 2020) => {
     if (!['year', 'week', 'age_group', 'sex'].includes(dimension)) return false
     const statement = `SELECT DISTINCT ${dimension} FROM weekly_deaths ` + (dimension === 'year' ? ';' : `WHERE year=?;`)
     console.log(statement)
     const params = (dimension === 'year' ? [] : [year])
-    const result = await new Promise((resolve, reject) => {
+    const results: {}[] = await new Promise((resolve, reject) => {
         let d = new sqlite.Database('covid.db')
         d.all(statement, params, (e, r) => {
             if (e) reject(e)
@@ -127,12 +128,16 @@ export const fetchOptionsFromDb = async (dimension: 'year' | 'week' | 'age_group
         })
         d.close()
     })
-    return result
+    const options = []
+    results.forEach(result => options.push(result[dimension]))
+    return options
 }
+
+
 
 // console.time("Loading database")
 // loadDatabase().then(()=>console.timeEnd("Loading database"))
 
-// fetchOptionsFromDb('year').then(console.log)
+// fetchOptionsFromDb('week', 2020).then(console.log)
 
-// fetchDeathsFromDb(0, 0, '85+').then(console.log)
+// fetchDeathsFromDb(2022, 3).then(console.log)
