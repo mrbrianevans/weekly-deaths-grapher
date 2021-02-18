@@ -18,7 +18,7 @@ server.get('/css', (req, res)=>{
     res.sendFile(path.resolve(__dirname, 'stylesheet.css'))
 })
 
-
+//todo: make this rather fetch data from the cache database
 server.get('/fetch', async(req, res)=>{
     const {year, week} = req.query
     const observation = await fetchWeek(year, week)
@@ -30,17 +30,21 @@ server.get('/fetch', async(req, res)=>{
 
 io.on('connection', (socket)=>{
     console.log("\x1b[36mNew connection started\x1b[0m")
-    socket.on('fetch', async(params)=>{
+    socket.on('fetch', async(params)=> {
 
         console.log("Emitting all datapoints", params)
+        //todo: instead of this code looping through years, it should just call the sql like:
+        // - select * from deaths where year > [startyear]  AND year < [endyear]
+        // and then emit each result in full. Move the sleep function to here rather than DB
         for (let year = params["start_year"]; year <= params["end_year"]; year++) {
             //todo: make intervals the total in a 3 week interval, rather than every third week
             for (let week = 1; week <= 53; week += Number(params["week_intervals"])) {
                 // const result = await fetchWeek(year, week, params.age_groups, params.sex)
                 const result = await fetchDeathsFromDb(year, week, params.age_groups, params.sex)
-                if (result)
+                if (result) {
                     socket.emit('dataPoint', {year: year, week: week, value: result, ...params})
-                else {
+                    console.log('emitting', {year: year, week: week, value: result, ...params})
+                } else {
                     console.log(`Reached the end of ${year} at week ${week}`)
                     break
                 }

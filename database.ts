@@ -9,6 +9,8 @@ const age_groups: (year: number) => string[] = (year) => {
             "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90+"]
 }
 
+//todo: save this database file in a Docker Volume for persistant data storage
+
 // this loads all data into the database from where it last left off. Takes over 2 hours to run from empty
 export const loadDatabase = async () => {
     let d = new sqlite.Database('covid.db')
@@ -35,8 +37,11 @@ export const loadDatabase = async () => {
 
     }
     const {year: latestYear, week: latestWeek} = await getLatestResult()
+    //todo: some error checking here. count the number of entries in the most recent week in db
+    // should be exactly 45, if not, it didn't finish the last time and should do so now
     for (let year = latestYear, week = latestWeek + 1, hasNextWeek = true, hasNextYear = true; hasNextYear && year < 2024; year++, week = 1, hasNextWeek = true) {
         console.log("Year ", year)
+        if (year == 2021) break;
         while (hasNextWeek) {
             if (week <= latestWeek && year == latestYear) week = latestWeek + 1
             console.log("Week", week)
@@ -68,7 +73,6 @@ export const loadDatabase = async () => {
         }
         if (!hasNextWeek && week === 2) hasNextYear = false;
     }
-
     d.close()
 }
 
@@ -134,10 +138,12 @@ export const fetchOptionsFromDb = async (dimension: 'year' | 'week' | 'age_group
 }
 
 
+if (process.argv[2] === 'load-database') {
+    console.time("Loading database")
+    loadDatabase().then(() => console.timeEnd("Loading database"))
+}
 
-// console.time("Loading database")
-// loadDatabase().then(()=>console.timeEnd("Loading database"))
 
 // fetchOptionsFromDb('week', 2020).then(console.log)
 
-// fetchDeathsFromDb(2022, 3).then(console.log)
+fetchDeathsFromDb(2021, 4).then(console.log)

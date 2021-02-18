@@ -60,14 +60,18 @@ const drawGraph = () => {
         // console.log("Drawing graph")
         chartWrapper.draw()
     }, 150)
-    socket.on('dataPoint', (data) => {
-        // console.log("Received", data.value)
+    const recieveDataPoint = (data) => {
+        // console.log("Received", data.value, 'week', data.week)
         datatable.addRow([new Date(data.year, 0, (1 + (data.week - 1) * 7)), data.value])
         // chartWrapper.draw()
-    })
+    }
+    socket.on('dataPoint', recieveDataPoint)
     const stopDrawingInterval = socket.on('finished', () => {
-        socket.off('datapoint') //stop listening after the graph is drawn
-        socket.off('finished', stopDrawingInterval)
+        // console.log("Finished!")
+        //todo: Cannot remove listeners???
+        socket.removeListener('datapoint', recieveDataPoint) //stop listening after the graph is drawn
+        socket.removeListener('finished', stopDrawingInterval)
+        chartWrapper.draw()
         clearInterval(drawer) // stop drawing the graph
     })
 }
@@ -112,6 +116,7 @@ socket.on('disconnect', () => {
 })
 
 socket.on('finished', () => {
+      socket.removeAllListeners('datapoint')
       console.log("Finished drawing graph")
       drawButton.disabled = false
       time.dispatchEvent(FinishedEvent)
