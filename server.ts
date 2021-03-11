@@ -1,5 +1,7 @@
 import {fetchWeek} from "./api";
 import {fetchDeathsFromDb, loadDatabase} from "./database";
+import {covidVsAverage} from "./endpoints";
+import * as fs from "fs";
 
 const express = require('express')
 const server = express()
@@ -11,15 +13,25 @@ server.get('/', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'index.html'))
 })
 
-server.get('/js', (req, res)=>{
+server.get('/js', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'client.js'))
 })
-server.get('/css', (req, res)=>{
+server.get('/css', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'stylesheet.css'))
+})
+server.get('/covid-vs-average', covidVsAverage)
+
+server.get('/10-year-average/:file', (req, res) => {
+    if (fs.existsSync(path.resolve(__dirname, '10-year-average', req.params?.file || 'NOT')))
+        res.status(200).sendFile(path.resolve(__dirname, '10-year-average', req.params.file))
+    else res.status(404).send("File does not exist")
+})
+server.get('/10-year-average/?', (req, res) => {
+    res.status(200).sendFile(path.resolve(__dirname, '10-year-average', 'index.html'))
 })
 
 //todo: make this rather fetch data from the cache database
-server.get('/fetch', async(req, res)=>{
+server.get('/fetch', async (req, res) => {
     const {year, week} = req.query
     const observation = await fetchWeek(year, week)
     if (observation)

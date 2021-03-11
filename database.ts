@@ -12,7 +12,7 @@ const age_groups: (year: number) => string[] = (year) => {
 //todo: save this database file in a Docker Volume for persistant data storage
 
 // this loads all data into the database from where it last left off. Takes over 2 hours to run from empty
-export const loadDatabase = async () => {
+export const loadDatabase = async (logging = false) => {
     let d = new sqlite.Database('covid.db')
 
     const getLatestResult: () => Promise<{ year, week }> = () => {
@@ -37,19 +37,20 @@ export const loadDatabase = async () => {
 
     }
     const {year: latestYear, week: latestWeek} = await getLatestResult()
+    if (logging) console.log("Latest stored data is week", latestWeek, 'of', latestYear)
     //todo: some error checking here. count the number of entries in the most recent week in db
     // should be exactly 45, if not, it didn't finish the last time and should do so now
     for (let year = latestYear, week = latestWeek + 1, hasNextWeek = true, hasNextYear = true; hasNextYear && year < 2024; year++, week = 1, hasNextWeek = true) {
-        console.log("Year ", year)
-        if (year == 2021) break;
+        if (logging || true) console.log("Year ", year)
         while (hasNextWeek) {
             if (week <= latestWeek && year == latestYear) week = latestWeek + 1
-            console.log("Week", week)
+            if (logging || true) console.log("Week", week)
             for (let age_group_index in age_groups(year)) {
                 const age_group = age_groups(year)[age_group_index]
                 for (let sexIndex in ['male', 'female']) {
                     const sex = ['male', 'female'][sexIndex]
-                    const result = await fetchWeek(year, week, age_group, sex)
+                    const result = await fetchWeek(year, week, age_group, sex, logging)
+                    if (logging) console.log("Result for ", week, year, ':', result)
                     if (result !== false) {
                         await insertRow(year, week, sex, age_group, result).then((r) => {
                             if (r === 'OK')
@@ -146,4 +147,4 @@ if (process.argv[2] === 'load-database') {
 
 // fetchOptionsFromDb('week', 2020).then(console.log)
 
-fetchDeathsFromDb(2021, 4).then(console.log)
+// fetchDeathsFromDb(2021, 4).then(console.log)
