@@ -20,6 +20,8 @@ export const covidVsAverage = async (req: Request, res: Response) => {
         {"type": "string", "role": "tooltip", "p": {"html": true}},
         '2021',
         '2020',
+        {label: 'COVID - 10Y_Average', id: 'difference_series'},
+        {label: 'Reported covid deaths (fake data)', id: 'covid_series'},
         ...Object.keys(eachYearsDeaths)
             .slice(0, 10)
             .map(year => ({
@@ -32,25 +34,28 @@ export const covidVsAverage = async (req: Request, res: Response) => {
     console.log(datatable)
     for (let week = 1; week <= 53; week++) {
         // html tooltip for each datapoint
-        const tooltip = `
-<p><b>2020: </b>${eachYearsDeaths[2020].find(row => row.week == week)?.deaths}</p>
-${eachYearsDeaths[2021].find(row => row.week == week) ? `<div><p><b>2021: </b>${eachYearsDeaths[2021].find(row => row.week == week).deaths}` : ''}</p>
-            <p>
-                    <b>
-                    10Y-average: 
-                    </b>
-            ${Math.round(Object.keys(eachYearsDeaths)
+        const covidFigure = eachYearsDeaths[2021].find(row => row.week == week)?.deaths ||
+            eachYearsDeaths[2020].find(row => row.week == week)?.deaths
+        const averageFigure = Object.keys(eachYearsDeaths)
                 .slice(0, 10)
                 .map(year => eachYearsDeaths[year]
                     .find(row => row.week == week)?.deaths || 0)
                 .reduce((previousValue, currentValue) => previousValue + currentValue) /
-            Object.values(eachYearsDeaths)
-                .filter((value: [{ week: number }]) => value.find(row => row.week == week)).length)}
-            </p></div>`
+            Object.values(eachYearsDeaths).slice(0, 10)
+                .filter((value: [{ week: number }]) => value.find(row => row.week == week)).length
+        const tooltip = `<div>
+               <p>
+                   <b>COVID: </b>${covidFigure}
+               </p>
+               <p>
+                    <b>10Y-average: </b>${Math.round(averageFigure)}
+               </p></div>`
 
         datatable.push([week, tooltip,
             eachYearsDeaths[2021].find(row => row.week == week)?.deaths,
             eachYearsDeaths[2020].find(row => row.week == week)?.deaths,
+            covidFigure - averageFigure,
+            (covidFigure - averageFigure) * (0.5 + Math.random()),
             ...Object.keys(eachYearsDeaths)
                 .slice(0, 10)
                 .map(year => eachYearsDeaths[year]

@@ -11,13 +11,15 @@ const age_groups: (year: number) => string[] = (year) => {
 
 //todo: save this database file in a Docker Volume for persistant data storage
 
+//todo: also load the covid_deaths table
+
 // this loads all data into the database from where it last left off. Takes over 2 hours to run from empty
-export const loadDatabase = async (logging = false) => {
+export const loadDatabase = async (logging = false, covid = false) => {
     let d = new sqlite.Database('covid.db')
 
     const getLatestResult: () => Promise<{ year, week }> = () => {
         return new Promise(resolve => {
-            d.get("SELECT year, week FROM weekly_deaths ORDER BY year desc, week desc", (e, r) => {
+            d.get(`SELECT year, week FROM ${covid ? 'covid_deaths' : 'weekly_deaths'} ORDER BY year desc, week desc`, (e, r) => {
                 resolve(r)
             })
         })
@@ -25,7 +27,7 @@ export const loadDatabase = async (logging = false) => {
 
     const insertRow = (year, week, sex, age_group, deaths) => {
         return new Promise((resolve, reject) => {
-            d.run("INSERT INTO weekly_deaths (year, week, sex, age_group, deaths) VALUES (?, ?, ?, ?, ?)",
+            d.run(`INSERT INTO ${covid ? 'covid_deaths' : 'weekly_deaths'} (year, week, sex, age_group, deaths) VALUES (?, ?, ?, ?, ?)`,
                 [year, week, sex, age_group, deaths],
                 (err) => {
                     if (err)
@@ -49,7 +51,7 @@ export const loadDatabase = async (logging = false) => {
                 const age_group = age_groups(year)[age_group_index]
                 for (let sexIndex in ['male', 'female']) {
                     const sex = ['male', 'female'][sexIndex]
-                    const result = await fetchWeek(year, week, age_group, sex, logging)
+                    const result = await fetchWeek(year, week, age_group, sex, logging, covid)
                     if (logging) console.log("Result for ", week, year, ':', result)
                     if (result !== false) {
                         await insertRow(year, week, sex, age_group, result).then((r) => {
@@ -141,7 +143,9 @@ export const fetchOptionsFromDb = async (dimension: 'year' | 'week' | 'age_group
 
 if (process.argv[2] === 'load-database') {
     console.time("Loading database")
-    loadDatabase().then(() => console.timeEnd("Loading database"))
+    // ts-node database load-database [covid]
+    loadDatabase(false, process.argv[3] === 'covid')
+        .then(() => console.timeEnd("Loading database"))
 }
 
 

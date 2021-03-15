@@ -33,7 +33,7 @@ server.get('/10-year-average/?', (req, res) => {
 //todo: make this rather fetch data from the cache database
 server.get('/fetch', async (req, res) => {
     const {year, week} = req.query
-    const observation = await fetchWeek(year, week)
+    const observation = await fetchWeek(year, week, 'all', 'all', false, false)
     if (observation)
         res.status(200).send(observation)
     else

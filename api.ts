@@ -4,7 +4,7 @@ import axios from "axios"
 // Fetch the number of deaths in a particular week between 2010 and 2020
 //
 // Either both age and sex must be specified, or neither, but never only one
-export const fetchWeek = async (year: number, week: number, age_groups = 'all', sex = 'all', logging = false) => {
+export const fetchWeek = async (year: number, week: number, age_groups = 'all', sex = 'all', logging = false, covid: boolean = false) => {
     let base_url
     if (year >= 2020) {
         if (age_groups == 'all') age_groups = 'all-ages'
@@ -20,13 +20,13 @@ export const fetchWeek = async (year: number, week: number, age_groups = 'all', 
             'agegroups': age_groups,
             'time': year,
             'geography': 'K04000001',
-            'deaths': 'total-registered-deaths',
+            'deaths': covid ? 'deaths-involving-covid-19-registrations' : 'total-registered-deaths',
             'sex': sex
         }
     })
-    if (logging) console.log('request:', response.request)
+    // if (logging) console.log('request:', response.request)
     if (response.status === 200) {
-        if (logging) console.log("Response data:", response.data)
+        // if (logging) console.log("Response data:", response.data)
         if (response.data.observations === null) {
             if (logging) console.error("No registered observations")
             return false
